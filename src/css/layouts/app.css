@@ -11,3 +11,19 @@
   display: grid;
   gap: 1em;
 }
+
+html {
+  background-color: #e0e0e0;
+}
+
+.logo {
+  width: 10rem;
+  height: auto;
+}
+
+.header {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  align-items: center;
+}

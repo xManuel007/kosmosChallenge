@@ -1,153 +1,87 @@
-import React, { useRef, useState, useEffect } from 'react'
-import Moveable from "react-moveable";
+import Moveable from 'react-moveable';
+//documentation of the movable library https://daybrush.com/moveable/release/latest/doc/
+import { useMoveableComponent } from '../../hooks/useMoveableComponent';
+// Importing a custom hook named useMoveableComponent
 
-const Component = ({
-  updateMoveable,
-  top,
-  left,
-  width,
-  height,
-  index,
+export const Component = ({
   color,
+  deleteMoveable,
+  height,
   id,
-  setSelected,
+  image,
+  index,
   isSelected = false,
-  updateEnd,
-  onDelete,
+  left,
+  position,
+  setSelected,
+  top,
+  updateMoveable,
+  width,
 }) => {
-  const ref = useRef();
-
-  const [nodoReferencia, setNodoReferencia] = useState({
-    top,
-    left,
-    width,
-    height,
-    index,
+    // Destructuring the props received by the Component
+  const { ref, onDrag, onResize, onResizeEnd } = useMoveableComponent({
+     // Calling the useMoveableComponent hook and getting the required properties
     color,
+    height,
     id,
+    image,
+    index,
+    left,
+    position,
+    setSelected,
+    top,
+    updateMoveable,
+    width,
   });
-
-  let parent = document.getElementById("parent");
-  let parentBounds = parent?.getBoundingClientRect();
-
-  const onResize = async (e) => {
-    // ACTUALIZAR ALTO Y ANCHO
-    let newWidth = e.width;
-    let newHeight = e.height;
-
-    const positionMaxTop = top + newHeight;
-    const positionMaxLeft = left + newWidth;
-
-    if (positionMaxTop > parentBounds?.height)
-      newHeight = parentBounds?.height - top;
-    if (positionMaxLeft > parentBounds?.width)
-      newWidth = parentBounds?.width - left;
-
-    updateMoveable(id, {
-      top,
-      left,
-      width: newWidth,
-      height: newHeight,
-      color,
-    });
-
-    // ACTUALIZAR NODO REFERENCIA
-    const beforeTranslate = e.drag.beforeTranslate;
-
-    ref.current.style.width = `${e.width}px`;
-    ref.current.style.height = `${e.height}px`;
-
-    let translateX = beforeTranslate[0];
-    let translateY = beforeTranslate[1];
-
-    ref.current.style.transform = `translate(${translateX}px, ${translateY}px)`;
-
-    setNodoReferencia({
-      ...nodoReferencia,
-      translateX,
-      translateY,
-      top: top + translateY < 0 ? 0 : top + translateY,
-      left: left + translateX < 0 ? 0 : left + translateX,
-    });
-  };
-
-  const onResizeEnd = async (e) => {
-    let newWidth = e.lastEvent?.width;
-    let newHeight = e.lastEvent?.height;
-
-    const positionMaxTop = top + newHeight;
-    const positionMaxLeft = left + newWidth;
-
-    if (positionMaxTop > parentBounds?.height)
-      newHeight = parentBounds?.height - top;
-    if (positionMaxLeft > parentBounds?.width)
-      newWidth = parentBounds?.width - left;
-
-    const { lastEvent } = e;
-    const { drag } = lastEvent;
-    const { beforeTranslate } = drag;
-
-    const absoluteTop = top + beforeTranslate[1];
-    const absoluteLeft = left + beforeTranslate[0];
-
-    updateMoveable(
-      id,
-      {
-        top: absoluteTop,
-        left: absoluteLeft,
-        width: newWidth,
-        height: newHeight,
-        color,
-      },
-      true
-    );
-  };
 
   return (
     <>
-      <div
+      <img
+        alt={'image-' + id}
         ref={ref}
-        className="draggable"
-        id={"component-" + id}
+        className='draggable'
+        id={'component-' + id}
         style={{
-          position: "absolute",
+          position: 'absolute',
           top: top,
           left: left,
           width: width,
           height: height,
-          background: color,
+          objectFit: position,
+          objectPosition: 'center',
         }}
+        src={image}
         onClick={() => setSelected(id)}
       />
 
+      { isSelected ?
+        <button
+        className="delete-button"
+        onClick={() => deleteMoveable(id)}
+        style={{
+          position: 'absolute',
+          top: top,
+          left: left + width + 5,
+        }}
+      >
+        <img width="16" height="16" src="https://img.icons8.com/pastel-glyph/64/trash.png" alt="trash"/>
+      </button> : null}
       <Moveable
-        target={isSelected && ref.current}
+        target={isSelected && ref.current} // Specifying the target element to make it movable
         resizable
         draggable
-        onDrag={(e) => {
-          const newPosition = {
-            top: e.top < 0 ? 0 : e.top,
-            left: e.left < 0 ? 0 : e.left,
-            width,
-            height,
-            color,
-          };
-          updateMoveable(id, newPosition);
+        onDrag={e => {
+          onDrag(e);
         }}
         onResize={onResize}
         onResizeEnd={onResizeEnd}
-        keepRatio={false}
+        keepRatio={false} //if true, this will be maintain the ratio aspect so it wont deform
         throttleResize={1}
-        renderDirections={["nw", "n", "ne", "w", "e", "sw", "s", "se"]}
+        renderDirections={['nw', 'n', 'ne', 'w', 'e', 'sw', 's', 'se']}
         edge={false}
-        zoom={1}
         origin={false}
         padding={{ left: 0, top: 0, right: 0, bottom: 0 }}
       />
-      <button onClick={() => onDelete(id)}>Delete</button>
-
     </>
   );
 };
-
-export default Component;
